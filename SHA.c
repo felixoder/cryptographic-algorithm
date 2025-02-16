@@ -144,22 +144,112 @@ char* sha256(const char* input)
 	return output;
 }
 
+/* DJB2 hash Written by Daniel J. Bernstein (also known as djb), this simple hash function dates back to 1991.*/
+
+unsigned long djb2_hash(char *str)
+{
+	unsigned long hash = 5381;
+	int c;
+	
+	while((c = *(str++)))
+	{
+		hash = ((hash << 5) + hash) + c; /* hash * 33 + c */
+	}
+
+	return hash;
+
+}
+
+/* The MD5 message-digest algorithm is a widely used hash function producing a 128-bit hash value. MD5 was designed by Ronald Rivest in 1991 to replace an earlier hash function MD4,[3] and was specified in 1992 as RFC 1321 */
+
+void md5_hash(const char *str, uint8_t *digest) {
+    uint32_t a0 = 0x67452301;
+    uint32_t b0 = 0xefcdab89;
+    uint32_t c0 = 0x98badcfe;
+    uint32_t d0 = 0x10325476;
+
+    size_t initial_len = strlen(str);
+    size_t new_len = ((initial_len + 8) / 64 + 1) * 64;
+    uint8_t *msg = calloc(new_len, 1);
+    memcpy(msg, str, initial_len);
+    msg[initial_len] = 0x80; /* Adding one bit */
+
+    uint64_t bit_len = initial_len * 8;
+    memcpy(msg + new_len - 8, &bit_len, 8);
+
+    for (size_t offset = 0; offset < new_len; offset += 64) {
+        uint32_t M[16];
+        memcpy(M, msg + offset, 64);
+
+        uint32_t A = a0, B = b0, C = c0, D = d0;
+
+        for (uint32_t i = 0; i < 64; i++) {
+            uint32_t F, g;
+            if (i < 16) {
+                F = (B & C) | (~B & D); 
+                g = i;
+            } else if (i < 32) {
+                F = (D & B) | (~D & C);
+                g = (5 * i + 1) % 16;
+            } else if (i < 48) {
+                F = B ^ C ^ D;
+                g = (3 * i + 5) % 16;
+            } else {
+                F = C ^ (B | ~D);
+                g = (7 * i) % 16;
+            }
+
+            F = F + A + K[i] + M[g];
+            uint32_t temp = D;
+            D = C;
+            C = B;
+            B = B + LEFTROTATE(F, s[i]);
+            A = temp;
+        }
+
+        a0 += A;
+        b0 += B;
+        c0 += C;
+        d0 += D;
+    }
+
+    free(msg);
+    memcpy(digest, &a0, 4);
+    memcpy(digest + 4, &b0, 4);
+    memcpy(digest + 8, &c0, 4);
+    memcpy(digest + 12, &d0, 4);
+}
+
+
+
 int main(int argc, char *argv[]) 
 {
 	char input[128];
-	printf("Enter the value: ");F;
+
+	
+	printf("Enter the value: ");
+	fflush(stdout);
 	if(scanf("%127s", input) != 1)
 	{
 		perror("Allocation failed");
 		return -1;
 	}
-
 	
-	char* hash = sha256(input);
-	printf("SHA-256 Hash: %s\n", hash);
 
+	char* sha = sha256(input);
+	unsigned long djb2 = djb2_hash(input);
 
-	free(hash);
+	printf("felix Hash: %s\n", sha);
+	printf("Djb2 Hash: %lu\n", djb2);
+
+	uint8_t digest[16];
+    	md5_hash(input, digest);
+    
+    	printf("MD5 Hash: ");
+    	for (int i = 0; i < 16; i++)
+        	printf("%02x", digest[i]);
+    	printf("\n");
+	free(sha);
 
 	return 0;
 }
