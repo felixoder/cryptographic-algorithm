@@ -32,6 +32,7 @@ static uint32_t H[8] =
     0x6a09e667, 0xbb67ae85, 0x3c6ef372, 0xa54ff53a, 0x510e527f, 0x9b05688c,
     0x1f83d9ab, 0x5be0cd19
 };
+
 // MD5 Constants
 const uint32_t K[] = {
     0xd76aa478, 0xe8c7b756, 0x242070db, 0xc1bdceee, 0xf57c0faf, 0x4787c62a, 0xa8304613, 0xfd469501,
@@ -59,4 +60,9 @@ uint8_t* padMessage(uint8_t*, size_t, size_t*);
 void compressBlock(uint32_t*, uint32_t*);
 void toHex(uint32_t*, char*);
 char* sha256(const char*);
- //char* getcrypto(char*);
+
+/* For DJB2 Hash */
+unsigned long djb2_hash(char*);
+
+/* For MD5 Hash */
+void md5_hash(const char*, uint8_t*); 
